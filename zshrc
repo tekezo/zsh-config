@@ -26,22 +26,38 @@ export LC_CTYPE="en_US.UTF-8"
 autoload -Uz add-zsh-hook compinit
 
 # Shell and history behavior.
-setopt CLOBBER HIST_FCNTL_LOCK INC_APPEND_HISTORY HIST_REDUCE_BLANKS
-setopt HIST_EXPIRE_DUPS_FIRST HIST_IGNORE_DUPS HIST_IGNORE_ALL_DUPS
-setopt HIST_FIND_NO_DUPS HIST_IGNORE_SPACE HIST_SAVE_NO_DUPS HIST_VERIFY
-setopt INTERACTIVE_COMMENTS COMPLETE_IN_WORD ALWAYS_TO_END AUTO_MENU AUTO_LIST
-setopt AUTO_PARAM_SLASH
-unsetopt AUTO_CD CDABLE_VARS CORRECT EXTENDED_HISTORY MENU_COMPLETE FLOW_CONTROL
+setopt ALWAYS_TO_END
+setopt COMPLETE_IN_WORD
+setopt HIST_FCNTL_LOCK
+setopt HIST_FIND_NO_DUPS
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_REDUCE_BLANKS
+setopt HIST_SAVE_NO_DUPS
+setopt HIST_VERIFY
+setopt INC_APPEND_HISTORY
+setopt INTERACTIVE_COMMENTS
+unsetopt FLOW_CONTROL
 
 HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
 HISTSIZE=10000
 SAVEHIST=10000
 
-# Completion using zsh's built-in completion functions only.
-typeset _zcompdump=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump
-mkdir -p "${_zcompdump:h}"
-compinit -i -d "$_zcompdump"
-unset _zcompdump
+# Store backslash-continued commands as one history line. Remove both the
+# backslash and newline to preserve the command's original meaning.
+function _history_join_continuations() {
+  local entry=${1%$'\n'}
+  [[ "$entry" == *$'\\\n'* ]] || return 0
+
+  print -sr -- "${entry//$'\\\n'/}"
+  # Do not save the original multiline entry after adding its joined form.
+  return 1
+}
+add-zsh-hook zshaddhistory _history_join_continuations
+
+# Completion
+compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{[:lower:]}={[:upper:]}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*:descriptions' format ' %F{yellow}-- %d --%f'
