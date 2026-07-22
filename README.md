@@ -15,3 +15,12 @@ Optional machine-local settings remain in:
 
 - `~/.config/zsh/private.zshenv.zsh`
 - `~/.config/zsh/private.zshrc.zsh`
+
+## Update
+
+Update this repository from anywhere and restart the current zsh with the new
+configuration:
+
+```sh
+update-zsh-config
+```

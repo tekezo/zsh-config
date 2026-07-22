@@ -132,6 +132,13 @@ function tmux-auto() {
   fi
 }
 
+function update-zsh-config() {
+  local config_dir="$HOME/.local/share/zsh-config"
+
+  command git -C "$config_dir" pull --ff-only || return
+  exec zsh
+}
+
 #
 # Create ~/.config/zsh
 #
