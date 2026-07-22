@@ -32,10 +32,10 @@ function _prompt_inherit_ssh_auth_sock() {
 
   local remote_indicator='🏠 local %B'
   local remote_color='%F{white}'
-  : ${ZSH_PROMPT_SSH_COLOR:='%F{white}%K{green}'}
+  : ${ZSH_PROMPT_COLOR:='%F{white}%K{green}'}
   if [[ -n "$SSH_TTY" ]]; then
     remote_indicator='⛺️ ssh %B'
-    remote_color=$ZSH_PROMPT_SSH_COLOR
+    remote_color=$ZSH_PROMPT_COLOR
   fi
   : ${ZSH_PROMPT_HOSTNAME:='%M'}
 

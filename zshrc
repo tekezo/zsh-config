@@ -142,10 +142,10 @@ function tmux-auto() {
 
   if [[ ! -e "$private_zsh_dir/private.zshenv.zsh" ]]; then
     print -r -- '# blue
-# export ZSH_PROMPT_SSH_COLOR='"'"'%F{black}%K{blue}'"'"'
+# export ZSH_PROMPT_COLOR='"'"'%F{black}%K{blue}'"'"'
 
 # red
-# export ZSH_PROMPT_SSH_COLOR="%F{white}%K{red}"
+# export ZSH_PROMPT_COLOR="%F{white}%K{red}"
 
 # hostname
 # export ZSH_PROMPT_HOSTNAME="example.com"
