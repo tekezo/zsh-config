@@ -17,7 +17,7 @@ export LANG="en_US.UTF-8"
 export LC_COLLATE="C"
 
 # Override LC_CTYPE because it may be set to `UTF-8`.
-export LC_CTYLE="en_US.UTF-8"
+export LC_CTYPE="en_US.UTF-8"
 
 #
 # zsh configuration
