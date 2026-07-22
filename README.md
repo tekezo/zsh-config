@@ -1,5 +1,7 @@
 # zsh-config
 
+![screenshot](./files/screenshot.png)
+
 ## Install
 
 ```sh
