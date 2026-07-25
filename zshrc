@@ -58,6 +58,7 @@ add-zsh-hook zshaddhistory _history_join_continuations
 
 # Completion
 compinit
+zstyle ':completion:*' completer _complete _correct
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{[:lower:]}={[:upper:]}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*:descriptions' format ' %F{yellow}-- %d --%f'
