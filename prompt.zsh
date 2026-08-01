@@ -8,9 +8,9 @@ function _prompt_git() {
   branch=$(command git rev-parse --abbrev-ref HEAD 2>/dev/null) || return
   revision=$(command git log --pretty=format:'%h' -n 1 2>/dev/null) || return
   message=$(command git log --pretty=format:'%s' -n 1 2>/dev/null)
-  message=${message[1,55]}
   full="%B${branch}%b | ${revision} | %K{black}%F{cyan}${message}"
-  print -r -- "${full[1,95]}%k"
+  local max_width=$(( COLUMNS - 4 ))
+  print -r -- "%${max_width}<…<${full}%<<%k"
 }
 
 function _prompt_inherit_ssh_auth_sock() {
