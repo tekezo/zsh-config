@@ -74,6 +74,15 @@ bindkey '^P' up-line-or-beginning-search
 bindkey '^N' down-line-or-beginning-search
 bindkey '^U' backward-kill-line
 
+function my-widget-reload-zshrc() {
+  zle clear-screen
+  source "$HOME/.zshrc"
+  hash -r
+  zle reset-prompt
+}
+zle -N my-widget-reload-zshrc
+bindkey '^L' my-widget-reload-zshrc
+
 #
 # Other configurations
 #
