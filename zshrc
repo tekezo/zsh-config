@@ -143,7 +143,7 @@ bindkey '^O' my-widget-popd
 function my-widget-peco-select-history() {
   local reverse_command=tac
   (( $+commands[tac] )) || reverse_command='tail -r'
-  BUFFER=$(fc -l -n 1 | eval "$reverse_command" | TERM=xterm peco --query "$LBUFFER")
+  BUFFER=$(fc -l -n 1 | eval "$reverse_command" | peco --query "$LBUFFER")
   CURSOR=$#BUFFER
   zle -R -c
 }
