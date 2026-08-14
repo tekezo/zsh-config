@@ -54,7 +54,7 @@ function _prompt_inherit_ssh_auth_sock() {
   PROMPT="
 ⬆ ⏰ %F{yellow}%D{%F %T %Z}%f ⬆
 \${(l:\$(( COLUMNS - 1 ))::─:)}
-${remote_color}${remote_indicator}${ZSH_PROMPT_HOSTNAME}%f %F{magenta}@%n%f
+${remote_color}${remote_indicator}${ZSH_PROMPT_HOSTNAME}%f%k %F{magenta}@%n%f
 📁 %F{green}%d%f\$(_prompt_git)
 
 %# "
