@@ -173,19 +173,19 @@ function update-zsh-config() {
   local private_zsh_dir="$HOME/.config/zsh"
   mkdir -p "$private_zsh_dir"
 
-  if [[ ! -e "$private_zsh_dir/private.zshenv.zsh" ]]; then
+  [[ -e "$private_zsh_dir/private.zshenv.zsh" ]] || : > "$private_zsh_dir/private.zshenv.zsh"
+
+  if [[ ! -e "$private_zsh_dir/private.zshrc.zsh" ]]; then
     print -r -- '# blue
-# export ZSH_PROMPT_COLOR='"'"'%F{black}%K{blue}'"'"'
+# ZSH_PROMPT_COLOR='"'"'%F{black}%K{blue}'"'"'
 
 # red
-# export ZSH_PROMPT_COLOR="%F{white}%K{red}"
+# ZSH_PROMPT_COLOR="%F{white}%K{red}"
 
 # hostname
-# export ZSH_PROMPT_HOSTNAME="example.com"
-' > "$private_zsh_dir/private.zshenv.zsh"
+# ZSH_PROMPT_HOSTNAME="example.com"
+' > "$private_zsh_dir/private.zshrc.zsh"
   fi
-
-  [[ -e "$private_zsh_dir/private.zshrc.zsh" ]] || : > "$private_zsh_dir/private.zshrc.zsh"
 }
 
 #
