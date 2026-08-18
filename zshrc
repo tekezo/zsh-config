@@ -78,6 +78,9 @@ function my-widget-reload-zshrc() {
   zle clear-screen
   source "$HOME/.zshrc"
   hash -r
+  # Import history appended by other zsh processes, skipping entries that
+  # are already present in this shell's history list.
+  fc -RI "$HISTFILE"
   zle reset-prompt
 }
 zle -N my-widget-reload-zshrc
