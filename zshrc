@@ -144,6 +144,11 @@ zle -N my-widget-popd
 bindkey '^O' my-widget-popd
 
 function my-widget-peco-select-history() {
+  if (( ! $+commands[peco] )); then
+    zle history-incremental-search-backward
+    return
+  fi
+
   local reverse_command=tac
   (( $+commands[tac] )) || reverse_command='tail -r'
   BUFFER=$(fc -l -n 1 | eval "$reverse_command" | peco --query "$LBUFFER")
