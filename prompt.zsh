@@ -5,12 +5,13 @@ function _prompt_git() {
     return
   fi
 
-  local branch log revision tag message full
+  local branch log revision tag ahead message full
   branch=$(command git rev-parse --abbrev-ref HEAD 2>/dev/null) || return
   log=$(command git log --no-color --pretty=format:%h%n%s -n 1 2>/dev/null) || return
   revision=${log%%$'\n'*}
   message=${log#*$'\n'}
   tag=$(command git describe --tags --abbrev=0 HEAD 2>/dev/null) || tag=
+  ahead=$(command git rev-list --count '@{upstream}..HEAD' 2>/dev/null) || ahead=---
 
   # Make control characters visible so Git text cannot emit terminal escape sequences.
   branch=${(V)branch}
@@ -22,7 +23,7 @@ function _prompt_git() {
   tag=${tag//\%/%%}
   message=${message//\%/%%}
 
-  full="🔀 %F{blue}${branch} %F{black}| %F{cyan}${revision}"
+  full="🔀 %F{blue}${branch} %F{yellow}↑${ahead} %F{black}| %F{cyan}${revision}"
   full+=" %F{black}| %F{yellow}📌 ${tag:----}"
   full+=" %F{black}| %F{blue}${message}%f"
   local max_width=$(( COLUMNS - 4 ))
