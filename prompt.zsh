@@ -5,21 +5,26 @@ function _prompt_git() {
     return
   fi
 
-  local branch log revision message full
+  local branch log revision tag message full
   branch=$(command git rev-parse --abbrev-ref HEAD 2>/dev/null) || return
   log=$(command git log --no-color --pretty=format:%h%n%s -n 1 2>/dev/null) || return
   revision=${log%%$'\n'*}
   message=${log#*$'\n'}
+  tag=$(command git describe --tags --abbrev=0 HEAD 2>/dev/null) || tag=
 
   # Make control characters visible so Git text cannot emit terminal escape sequences.
   branch=${(V)branch}
+  tag=${(V)tag}
   message=${(V)message}
 
   # Escape percent signs so Git text is not interpreted as zsh prompt sequences.
   branch=${branch//\%/%%}
+  tag=${tag//\%/%%}
   message=${message//\%/%%}
 
-  full="🔀 %F{blue}${branch} %F{black}| %F{cyan}${revision} %F{black}| %F{blue}${message}%f"
+  full="🔀 %F{blue}${branch} %F{black}| %F{cyan}${revision}"
+  full+=" %F{black}| %F{yellow}📌 ${tag:----}"
+  full+=" %F{black}| %F{blue}${message}%f"
   local max_width=$(( COLUMNS - 4 ))
   print
   print -r -- "%${max_width}<…<${full}%<<"
