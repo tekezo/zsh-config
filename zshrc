@@ -46,12 +46,20 @@ SAVEHIST=10000
 
 # Store backslash-continued commands as one history line. Remove both the
 # backslash and newline to preserve the command's original meaning.
+# Trim trailing whitespace from the stored entry as well.
 function _history_join_continuations() {
-  local entry=${1%$'\n'}
-  [[ "$entry" == *$'\\\n'* ]] || return 0
+  local original=${1%$'\n'}
+  local entry=${original//$'\\\n'/}
+  while [[ $entry == *[[:space:]] ]]; do
+    entry=${entry%?}
+  done
+  [[ $entry != "$original" ]] || return 0
 
-  print -sr -- "${entry//$'\\\n'/}"
-  # Do not save the original multiline entry after adding its joined form.
+  # Keep HIST_IGNORE_SPACE behavior when adding the normalized entry manually.
+  if [[ -n $entry && ! ( -o HIST_IGNORE_SPACE && $entry == ' '* ) ]]; then
+    print -sr -- "$entry"
+  fi
+  # Do not save the original entry after adding its normalized form.
   return 1
 }
 add-zsh-hook zshaddhistory _history_join_continuations
