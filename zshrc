@@ -71,6 +71,73 @@ zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{[:lower:]}={[:upper:]}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*:descriptions' format ' %F{yellow}-- %d --%f'
 
+# The stock _ssh_hosts returns as soon as a host from known_hosts matches,
+# which hides matching aliases from ~/.ssh/config. Add candidates from both
+# sources to the same completion result instead.
+function _ssh_hosts() {
+  local -a config_hosts
+  local config
+  local ret=1
+  integer ind
+
+  if [[ $IPREFIX == *@ ]]; then
+    _combination -s '[:@]' my-accounts users-hosts \
+      "users=${IPREFIX/@}" hosts "$@" && ret=0
+  else
+    _combination -s '[:@]' my-accounts users-hosts \
+      ${opt_args[-l]:+"users=${opt_args[-l]:q}"} hosts "$@" && ret=0
+  fi
+
+  if (( ind = ${words[(I)-F]} )); then
+    config=${~words[ind+1]} 2>/dev/null
+  else
+    config="$HOME/.ssh/config"
+  fi
+
+  if [[ -r $config ]]; then
+    local key line host
+    local -a lines=("${(@f)$(<"$config")}")
+    local -a match_args
+    local idx=1
+
+    while (( idx <= $#lines )); do
+      IFS=$'=\t ' read -r key line <<<"${lines[idx]}"
+      if [[ $key == ((#i)match) ]]; then
+        match_args=(${(z)line})
+        while (( $#match_args >= 2 )); do
+          if [[ ${match_args[1]} == (#i)(canonical|final|(|original)host) ]]; then
+            key=Host
+            line="${match_args[2]//,/ }"
+            break
+          fi
+          shift 2 match_args
+        done
+      fi
+
+      case $key in
+        ((#i)include)
+          lines[idx]=("${(@f)$(cd "${config:h}"; cat ${(z)~line})}") 2>/dev/null
+          ;;
+        ((#i)host(|name))
+          for host in ${(z)line}; do
+            [[ $host == *[*?]* ]] || config_hosts+=("$host")
+          done
+          ;&
+        (*)
+          (( ++idx ))
+          ;;
+      esac
+    done
+
+    if (( $#config_hosts )); then
+      _wanted hosts expl 'remote host name' \
+        compadd -M 'm:{a-zA-Z}={A-Za-z} r:|.=* r:|=*' "$@" $config_hosts && ret=0
+    fi
+  fi
+
+  return ret
+}
+
 # Emacs editing and prefix-aware history search without an external plugin.
 bindkey -e
 autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
