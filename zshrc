@@ -47,12 +47,27 @@ SAVEHIST=10000
 # Store backslash-continued commands as one history line. Remove both the
 # backslash and newline to preserve the command's original meaning.
 # Trim trailing whitespace from the stored entry as well.
-function _history_join_continuations() {
+function _history_filter_entry() {
   local original=${1%$'\n'}
   local entry=${original//$'\\\n'/}
+  local -a words
+  local command
   while [[ $entry == *[[:space:]] ]]; do
     entry=${entry%?}
   done
+
+  # zsh runs command_not_found_handler in a subshell, so it cannot remove the
+  # parent shell's history entry afterwards. Check the command before saving
+  # instead. Skip leading parameter assignments such as FOO=bar.
+  words=(${(z)entry})
+  for command in $words; do
+    [[ $command =~ '^[A-Za-z_][A-Za-z0-9_]*=' ]] || break
+  done
+  [[ $command == cd ]] && return 1
+  if [[ -n $command ]] && ! whence -w -- "$command" >/dev/null 2>&1; then
+    return 1
+  fi
+
   [[ $entry != "$original" ]] || return 0
 
   # Keep HIST_IGNORE_SPACE behavior when adding the normalized entry manually.
@@ -62,7 +77,7 @@ function _history_join_continuations() {
   # Do not save the original entry after adding its normalized form.
   return 1
 }
-add-zsh-hook zshaddhistory _history_join_continuations
+add-zsh-hook zshaddhistory _history_filter_entry
 
 # Completion
 compinit
