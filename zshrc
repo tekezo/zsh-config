@@ -36,9 +36,10 @@ setopt HIST_IGNORE_SPACE
 setopt HIST_REDUCE_BLANKS
 setopt HIST_SAVE_NO_DUPS
 setopt HIST_VERIFY
-setopt INC_APPEND_HISTORY
+setopt APPEND_HISTORY
 setopt INTERACTIVE_COMMENTS
 unsetopt FLOW_CONTROL
+unsetopt INC_APPEND_HISTORY
 
 HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
 HISTSIZE=10000
@@ -166,6 +167,9 @@ bindkey '^U' backward-kill-line
 
 function my-widget-reload-zshrc() {
   zle clear-screen
+  # Publish commands entered in this shell before importing commands written
+  # by other shells. -I limits the append to entries not written previously.
+  fc -AI "$HISTFILE"
   source "$HOME/.zshrc"
   hash -r
   # Import history appended by other zsh processes, skipping entries that
