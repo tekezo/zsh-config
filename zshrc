@@ -165,7 +165,20 @@ bindkey '^P' up-line-or-beginning-search
 bindkey '^N' down-line-or-beginning-search
 bindkey '^U' backward-kill-line
 
+typeset -g _reload_zshrc_buffer
+typeset -gi _reload_zshrc_cursor _reload_zshrc_restore
+
+function _restore_line_after_zshrc_reload() {
+  (( _reload_zshrc_restore )) || return
+  BUFFER=$_reload_zshrc_buffer
+  CURSOR=$_reload_zshrc_cursor
+  _reload_zshrc_restore=0
+}
+zle -N zle-line-init _restore_line_after_zshrc_reload
+
 function my-widget-reload-zshrc() {
+  local saved_buffer=$BUFFER
+  local saved_cursor=$CURSOR
   zle clear-screen
   # Publish commands entered in this shell before importing commands written
   # by other shells. -I limits the append to entries not written previously.
@@ -175,7 +188,13 @@ function my-widget-reload-zshrc() {
   # Import history appended by other zsh processes, skipping entries that
   # are already present in this shell's history list.
   fc -RI "$HISTFILE"
-  zle reset-prompt
+  # Start a fresh ZLE session so its history cursor sees entries imported by
+  # fc -RI. Restore the current edit buffer in zle-line-init.
+  _reload_zshrc_buffer=$saved_buffer
+  _reload_zshrc_cursor=$saved_cursor
+  _reload_zshrc_restore=1
+  BUFFER=
+  zle accept-line
 }
 zle -N my-widget-reload-zshrc
 bindkey '^L' my-widget-reload-zshrc
