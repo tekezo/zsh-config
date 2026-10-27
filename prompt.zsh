@@ -45,12 +45,26 @@ function _prompt_inherit_ssh_auth_sock() {
   [[ -S $value ]] && export SSH_AUTH_SOCK=$value
 }
 
+function _history_ignore_git_reset_hard() {
+  local -a words
+  words=(${(z)1})
+
+  if [[ ${words[1]} == git &&
+        ${words[2]} == reset &&
+        ${words[(I)--hard]} -ne 0 ]]; then
+    return 1
+  fi
+
+  return 0
+}
+
 () {
   setopt PROMPT_SUBST
   autoload -Uz add-zsh-hook
 
   _prompt_inherit_ssh_auth_sock
   add-zsh-hook preexec _prompt_inherit_ssh_auth_sock
+  add-zsh-hook zshaddhistory _history_ignore_git_reset_hard
 
   local remote_indicator='🏠 local '
   local remote_color='%F{yellow}'
