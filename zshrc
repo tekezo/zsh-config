@@ -46,8 +46,9 @@ HISTSIZE=10000
 SAVEHIST=10000
 
 # Store backslash-continued commands as one history line. Remove both the
-# backslash and newline to preserve the command's original meaning.
-# Trim trailing whitespace from the stored entry as well.
+# backslash and newline to preserve the command's original meaning. Ignore
+# entries that still contain newlines, which are typically pasted commands.
+# Trim trailing whitespace from stored entries as well.
 function _history_filter_entry() {
   local original=${1%$'\n'}
   local entry=${original//$'\\\n'/}
@@ -56,6 +57,10 @@ function _history_filter_entry() {
   while [[ $entry == *[[:space:]] ]]; do
     entry=${entry%?}
   done
+
+  # Ignore genuinely multiline entries, which are typically pasted commands.
+  # Backslash-continued commands no longer contain newlines at this point.
+  [[ $entry == *$'\n'* ]] && return 1
 
   # zsh runs command_not_found_handler in a subshell, so it cannot remove the
   # parent shell's history entry afterwards. Check the command before saving
