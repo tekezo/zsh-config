@@ -13,8 +13,11 @@ function _prompt_git() {
   tag=$(command git describe --tags --abbrev=0 HEAD 2>/dev/null) || tag=
 
   # Count commits ahead of the upstream branch when one is configured.
-  # For an unpushed branch, count commits not contained in any remote-tracking branch.
-  if ! ahead=$(command git rev-list --count '@{upstream}..HEAD' 2>/dev/null); then
+  # For an unpushed branch with a remote, count commits not contained in any
+  # remote-tracking branch. Repositories without a remote are shown separately.
+  if [[ -z $(command git remote 2>/dev/null) ]]; then
+    ahead='no remote'
+  elif ! ahead=$(command git rev-list --count '@{upstream}..HEAD' 2>/dev/null); then
     ahead=$(command git rev-list --count HEAD --not --remotes 2>/dev/null) || ahead=---
   fi
   local ahead_color=yellow
