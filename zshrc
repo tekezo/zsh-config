@@ -171,7 +171,14 @@ bindkey '^N' down-line-or-beginning-search
 bindkey '^U' backward-kill-line
 
 typeset -g _reload_zshrc_buffer
-typeset -gi _reload_zshrc_cursor _reload_zshrc_restore
+typeset -gi _reload_zshrc_cursor _reload_zshrc_restore _reload_zshrc_clear_screen
+
+function _clear_screen_after_zshrc_reload() {
+  (( _reload_zshrc_clear_screen )) || return
+  _reload_zshrc_clear_screen=0
+  echoti clear
+}
+add-zsh-hook precmd _clear_screen_after_zshrc_reload
 
 function _restore_line_after_zshrc_reload() {
   (( _reload_zshrc_restore )) || return
@@ -184,7 +191,6 @@ zle -N zle-line-init _restore_line_after_zshrc_reload
 function my-widget-reload-zshrc() {
   local saved_buffer=$BUFFER
   local saved_cursor=$CURSOR
-  zle clear-screen
   # Publish commands entered in this shell before importing commands written
   # by other shells. -I limits the append to entries not written previously.
   fc -AI "$HISTFILE"
@@ -198,6 +204,9 @@ function my-widget-reload-zshrc() {
   _reload_zshrc_buffer=$saved_buffer
   _reload_zshrc_cursor=$saved_cursor
   _reload_zshrc_restore=1
+  # Clear in precmd, after this ZLE session has ended but before the next prompt.
+  # Clearing from inside the widget makes ZLE restore the old prompt first.
+  _reload_zshrc_clear_screen=1
   BUFFER=
   zle accept-line
 }
