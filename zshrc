@@ -196,6 +196,9 @@ function my-widget-reload-zshrc() {
   fc -AI "$HISTFILE"
   source "$HOME/.zshrc"
   hash -r
+  if [[ -n $TMUX ]] && (( $#TMUX_PROFILE_DIRECTORIES )); then
+    tmux-profile
+  fi
   # Import history appended by other zsh processes, skipping entries that
   # are already present in this shell's history list.
   fc -RI "$HISTFILE"
@@ -285,12 +288,85 @@ function my-widget-peco-select-history() {
 zle -N my-widget-peco-select-history
 bindkey '^R' my-widget-peco-select-history
 
-function tmux-auto() {
-  if tmux list-sessions 2>/dev/null | grep -q '^0:'; then
-    tmux attach
-  else
-    tmux
+typeset -ga TMUX_PROFILE_DIRECTORIES=()
+
+function tmux-profile() {
+  local session=${1:-0}
+  local -a directories=("${TMUX_PROFILE_DIRECTORIES[@]}")
+  local directory index pane_id pane_command window_index
+  local -A window_exists
+  local result=0
+
+  if (( $#directories == 0 )); then
+    print -u2 -r -- 'tmux-profile: TMUX_PROFILE_DIRECTORIES is empty'
+    return 1
   fi
+
+  for directory in $directories; do
+    if [[ ! -d $directory ]]; then
+      print -u2 -r -- "tmux-profile: directory does not exist: $directory"
+      return 1
+    fi
+  done
+
+  if ! tmux has-session -t "$session" 2>/dev/null; then
+    tmux new-session -d -s "$session" -c "$directories[1]" || return
+  fi
+
+  for window_index in ${(f)"$(tmux list-windows -t "$session" -F '#{window_index}')"}; do
+    window_exists[$window_index]=1
+    tmux set-window-option -u -t "$session:$window_index" \
+      @tmux_profile_directory 2>/dev/null || true
+  done
+
+  for (( index = 1; index <= $#directories; ++index )); do
+    directory=$directories[$index]
+
+    if [[ -z ${window_exists[$index]:-} ]]; then
+      tmux new-window -d -t "$session:$index" -c "$directory" || return
+      window_exists[$index]=1
+      tmux set-window-option -t "$session:$index" \
+        @tmux_profile_directory "$directory" || return
+      continue
+    fi
+
+    tmux set-window-option -t "$session:$index" \
+      @tmux_profile_directory "$directory" || return
+    pane_id=$(tmux display-message -p -t "$session:$index" '#{pane_id}') || return
+
+    if [[ $pane_id == ${TMUX_PANE:-} ]]; then
+      builtin cd -- "$directory" || return
+      continue
+    fi
+
+    pane_command=$(tmux display-message -p -t "$pane_id" '#{pane_current_command}') || return
+    case $pane_command in
+      zsh|-zsh|bash|-bash)
+        tmux send-keys -t "$pane_id" C-u "cd -- ${(q)directory}" Enter || return
+        ;;
+      *)
+        print -u2 -r -- \
+          "tmux-profile: skipped window $index ($pane_command is running)"
+        result=1
+        ;;
+    esac
+  done
+
+  return $result
+}
+
+function tmux-auto() {
+  local session=0
+
+  if ! tmux has-session -t "$session" 2>/dev/null; then
+    if (( $#TMUX_PROFILE_DIRECTORIES )); then
+      tmux-profile "$session" || return
+    else
+      tmux new-session -d -s "$session" || return
+    fi
+  fi
+
+  tmux attach-session -t "$session"
 }
 
 function update-zsh-config() {
