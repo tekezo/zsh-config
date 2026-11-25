@@ -197,7 +197,7 @@ function my-widget-reload-zshrc() {
   source "$HOME/.zshrc"
   hash -r
   if [[ -n $TMUX ]] && (( $#TMUX_PROFILE_DIRECTORIES )); then
-    tmux-profile
+    tmux-profile --quiet-skips
   fi
   # Import history appended by other zsh processes, skipping entries that
   # are already present in this shell's history list.
@@ -291,6 +291,12 @@ bindkey '^R' my-widget-peco-select-history
 typeset -ga TMUX_PROFILE_DIRECTORIES=()
 
 function tmux-profile() {
+  local quiet_skips=0
+  if [[ ${1:-} == --quiet-skips ]]; then
+    quiet_skips=1
+    shift
+  fi
+
   local session=${1:-0}
   local -a directories=("${TMUX_PROFILE_DIRECTORIES[@]}")
   local directory index pane_id pane_command window_index
@@ -345,8 +351,10 @@ function tmux-profile() {
         tmux send-keys -t "$pane_id" C-u "cd -- ${(q)directory}" Enter || return
         ;;
       *)
-        print -u2 -r -- \
-          "tmux-profile: skipped window $index ($pane_command is running)"
+        if (( ! quiet_skips )); then
+          print -u2 -r -- \
+            "tmux-profile: skipped window $index ($pane_command is running)"
+        fi
         result=1
         ;;
     esac
